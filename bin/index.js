@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import commander from 'commander';
-import printValue from '../index.js';
+import printValue from '../src';
 
 const program = new commander.Command();
 const defaultFileToSave = process.cwd();

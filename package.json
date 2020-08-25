@@ -1,9 +1,9 @@
 {
   "name": "pages-loader-evg",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Pages loader",
   "bin": {
-    "index": "src/bin/index.js"
+    "index": "bin/index.js"
   },
   "engines": {
     "node": ">=14"

@@ -19,7 +19,6 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-  console.log(tempDir, 'tempDir');
 });
 
 afterEach(async () => {
