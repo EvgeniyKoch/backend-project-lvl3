@@ -1,0 +1,45 @@
+{
+  "name": "pages-loader-evg",
+  "version": "1.0.0",
+  "description": "Pages loader",
+  "bin": {
+    "index": "src/bin/index.js"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "scripts": {
+    "test": "npx -n --experimental-vm-modules jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EvgeniyKoch/backend-project-lvl3"
+  },
+  "author": "Kochetov Eugeniy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EvgeniyKoch/backend-project-lvl3/issues"
+  },
+  "type": "module",
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  },
+  "homepage": "https://github.com/EvgeniyKoch/backend-project-lvl3#readme",
+  "dependencies": {
+    "axios": "^0.20.0",
+    "commander": "^6.0.0",
+    "debug": "^4.1.1",
+    "lodash": "^4.17.20"
+  },
+  "devDependencies": {
+    "@jest/globals": "^26.4.1",
+    "eslint": "^7.7.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jest": "^23.20.0",
+    "jest": "^26.4.1",
+    "jest-cli": "^26.4.1",
+    "nock": "^13.0.4"
+  }
+}
