@@ -11,11 +11,12 @@ const nodeList = [
 
 const hasLocalLink = (link, source) => {
   const url = new URL(link, source);
-  return url.origin === source;
+  const { origin } = new URL(source);
+  return url.origin === origin;
 };
 
 export default (html, source, dir) => {
-  const $ = cheerio.load(html, { decodeEntities: false });
+  const $ = cheerio.load(html);
   const urls = [];
 
   nodeList.forEach(({ tag, attr }) => $(tag).each((i, el) => {
@@ -34,6 +35,6 @@ export default (html, source, dir) => {
 
   return {
     urls,
-    layout: $.html(),
+    layout: $.html({ decodeEntities: false }),
   };
 };

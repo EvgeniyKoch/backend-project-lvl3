@@ -28,9 +28,11 @@
   "homepage": "https://github.com/EvgeniyKoch/backend-project-lvl3#readme",
   "dependencies": {
     "axios": "^0.20.0",
+    "axios-debug-log": "^0.8.0",
     "cheerio": "^1.0.0-rc.3",
     "commander": "^6.0.0",
     "debug": "^4.1.1",
+    "listr": "^0.14.3",
     "lodash": "^4.17.20"
   },
   "devDependencies": {

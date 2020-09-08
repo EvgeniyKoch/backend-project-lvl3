@@ -1,3 +1,2 @@
-export const createHTMLFile = (source) => `${source.slice(8).replace(/(\W)/g, '-')}.html`;
-export const createResourceDir = (source) => `${source.slice(8).replace(/(\W)/g, '-')}_files`;
+export const createName = (source, ext) => `${source.slice(7).replace(/(\W)/g, '-')}${ext}`;
 export const createAssetFileName = (link) => `${link.slice(1).replace(/\//g, '-')}`;

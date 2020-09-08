@@ -1,6 +1,7 @@
 #!/usr/bin/env node
+
 import commander from 'commander';
-import printValue from '../src/index.js';
+import pageLoader from '../src/index.js';
 
 const program = new commander.Command();
 const defaultFileToSave = process.cwd();
@@ -11,7 +12,7 @@ program
   .option('-o, --output [type]', 'Output format', defaultFileToSave)
   .arguments('<source>')
   .action((source, { output }) => (
-    console.log(printValue(source, output))
+    console.log(pageLoader(source, output))
   ))
   .parse(process.argv);
 

@@ -1,37 +1,76 @@
 import fs from 'fs/promises';
 import os from 'os';
-import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
 import nock from 'nock';
-import pageLoader from '../src/index.js';
+import { fileURLToPath } from 'url';
+import debug from 'debug';
+
+import { beforeAll } from '@jest/globals';
+import pageLoader from '../src/page-loader.js';
 
 nock.disableNetConnect();
-
-const __filename = fileURLToPath(import.meta.url); // eslint-disable-line no-underscore-dangle
-const __dirname = dirname(__filename); // eslint-disable-line no-underscore-dangle
+// eslint-disable-next-line no-underscore-dangle
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', filename);
+const url = 'http://example.ru';
 
 let html;
 let tempDir;
+let css;
+
 beforeAll(async () => {
-  html = await fs.readFile(getFixturePath('courses.html'), 'utf-8');
+  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
 });
 
 beforeEach(async () => {
-  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+  html = await fs.readFile(getFixturePath('index.html'), 'utf-8');
+  css = await fs.readFile(getFixturePath('style.css'), 'utf-8');
+  debug.enable('page-loader');
 });
 
 afterEach(async () => {
   fs.rmdir(tempDir, { recursive: true });
 });
 
-test('load page with assets', async () => {
-  nock('https://example.ru')
-    .get('/page')
-    .reply(200, html);
+describe('Tests', () => {
+  it('load page with assets', async () => {
+    nock(url)
+      .get('/')
+      .reply(200, html);
 
-  const url = 'https://example.ru/page';
-  await pageLoader(url, tempDir);
-  const actualHTML = await fs.readFile(path.join(tempDir, 'example-ru-page.html'), 'utf-8');
-  expect(actualHTML).toBe(html);
+    nock(url)
+      .get('/style.css')
+      .reply(200, css);
+
+    nock(url)
+      .get('/terminal.jpg')
+      .replyWithFile(200, getFixturePath('terminal.jpg'));
+
+    nock(url)
+      .get('/main.js')
+      .replyWithFile(200, getFixturePath('main.js'));
+
+    await pageLoader(`${url}`, tempDir);
+
+    const receivedHTML = await fs.readFile(path.join(tempDir, 'example-ru.html'), 'utf-8');
+    const sources = await fs.readdir(tempDir);
+    const expectedCss = await fs.readFile(path.join(tempDir, 'example-ru_files/style.css'), 'utf-8');
+    const expectedImg = await fs.readFile(path.join(tempDir, 'example-ru_files/terminal.jpg'), 'utf-8');
+
+    expect(receivedHTML).toBeTruthy();
+    expect(sources).toHaveLength(2);
+    expect(expectedCss).toMatch(css);
+    expect(expectedImg).toBeTruthy();
+  });
+
+  it('should return toThrow', async () => {
+    nock(url)
+      .get('/empty')
+      .replyWithError({
+        message: 'Error: Request failed with status code 404',
+        code: 'NOT_FOUND',
+      });
+
+    await expect(pageLoader(`${url}/empty`, tempDir)).rejects.toThrow('404');
+  });
 });
