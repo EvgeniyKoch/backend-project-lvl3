@@ -3,6 +3,7 @@ import path from 'path';
 import axios from 'axios';
 import debug from 'debug';
 import axiosDebugger from 'axios-debug-log';
+import Listr from 'listr';
 
 import updateLayoutAndGetLinks from './render-resources.js';
 import { createName, createAssetFileName } from './utils.js';
@@ -28,23 +29,31 @@ export default (source, output) => {
       log('%o', 'updating layout');
       const { urls, layout } = updateLayoutAndGetLinks(html, source, dirName);
       urlsList = urls;
-      fs.writeFile(pathToFile, layout);
+      new Listr([{
+        title: 'Download updated layout',
+        task: () => fs.writeFile(pathToFile, layout),
+      }], { concurrent: true, exitOnError: false }).run();
     })
-    .then(() => fs.mkdir(dirFiles))
-    .then(() => urlsList.map(({ href, pathname }) => axios({
-      method: 'get',
-      url: href,
-      responseType: 'arraybuffer',
+    .then(() => {
+      new Listr([{
+        title: 'Create directory',
+        task: () => fs.mkdir(dirFiles),
+      }], { concurrent: true, exitOnError: false }).run();
     })
-      .then(({ data }) => {
-        const filename = createAssetFileName(pathname);
-        fs.writeFile(path.join(dirFiles, filename), data);
-        log('%o', `file: ${filename} wrote to ${dirFiles}`);
-      })
-      .catch((error) => {
-        log('%o', `Failed to write file. error: ${error.message}`);
-        console.log(error);
-      })))
+    .then(() => urlsList.forEach(({ href, pathname }) => {
+      new Listr([{
+        title: `Download file ${href}`,
+        task: () => axios({
+          method: 'get',
+          url: href,
+          responseType: 'arraybuffer',
+        })
+          .then(({ data }) => {
+            const filename = createAssetFileName(pathname);
+            fs.writeFile(path.join(dirFiles, filename), data);
+          }),
+      }], { concurrent: true, exitOnError: false }).run();
+    }))
     .catch((error) => {
       log('%o', `Failed to write layout. ${error.message}`);
       throw new Error(error.message);

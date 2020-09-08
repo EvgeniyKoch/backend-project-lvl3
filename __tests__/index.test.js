@@ -28,12 +28,12 @@ beforeEach(async () => {
   debug.enable('page-loader');
 });
 
-afterEach(async () => {
-  fs.rmdir(tempDir, { recursive: true });
+afterAll(async () => {
+  await fs.rmdir(tempDir, { recursive: true });
 });
 
 describe('Tests', () => {
-  it('load page with assets', async () => {
+  it('should load page', async () => {
     nock(url)
       .get('/')
       .reply(200, html);
@@ -54,11 +54,15 @@ describe('Tests', () => {
 
     const receivedHTML = await fs.readFile(path.join(tempDir, 'example-ru.html'), 'utf-8');
     const sources = await fs.readdir(tempDir);
-    const expectedCss = await fs.readFile(path.join(tempDir, 'example-ru_files/style.css'), 'utf-8');
-    const expectedImg = await fs.readFile(path.join(tempDir, 'example-ru_files/terminal.jpg'), 'utf-8');
 
     expect(receivedHTML).toBeTruthy();
     expect(sources).toHaveLength(2);
+  });
+
+  it('should load assets', async () => {
+    const expectedCss = await fs.readFile(path.join(tempDir, 'example-ru_files/style.css'), 'utf-8');
+    const expectedImg = await fs.readFile(path.join(tempDir, 'example-ru_files/terminal.jpg'), 'utf-8');
+
     expect(expectedCss).toMatch(css);
     expect(expectedImg).toBeTruthy();
   });

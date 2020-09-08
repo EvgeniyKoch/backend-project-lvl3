@@ -12,10 +12,10 @@ program
   .option('-o, --output [type]', 'Output format', defaultFileToSave)
   .arguments('<source>')
   .action((source, { output }) => (
-    console.log(pageLoader(source, output))
+    pageLoader(source, output)
+      .catch((error) => {
+        console.error(error);
+        process.exit(1);
+      })
   ))
   .parse(process.argv);
-
-if (!program.args.length) {
-  program.help();
-}
