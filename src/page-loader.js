@@ -1,14 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import axios from 'axios';
-import debug from 'debug';
 import axiosDebugger from 'axios-debug-log';
 import Listr from 'listr';
 
 import updateLayoutAndGetLinks from './render-resources.js';
-import { createName, createAssetFileName } from './utils.js';
-
-const log = debug('page-loader');
+import log, { createName, createAssetFileName } from './utils.js';
 
 axiosDebugger(log);
 
@@ -16,7 +13,7 @@ const querySource = (url) => axios.get(url)
   .then((res) => res.data);
 
 export default (source, output) => {
-  log('%o', 'Starting cli');
+  log('%o', `Starting download page ${source} to ${output}`);
 
   const fileName = createName(source, '.html');
   const pathToFile = path.join(output, fileName);
@@ -26,20 +23,11 @@ export default (source, output) => {
 
   return querySource(source)
     .then((html) => {
-      log('%o', 'updating layout');
       const { urls, layout } = updateLayoutAndGetLinks(html, source, dirName);
       urlsList = urls;
-      new Listr([{
-        title: 'Download updated layout',
-        task: () => fs.writeFile(pathToFile, layout),
-      }], { concurrent: true, exitOnError: false }).run();
+      fs.writeFile(pathToFile, layout);
     })
-    .then(() => {
-      new Listr([{
-        title: 'Create directory',
-        task: () => fs.mkdir(dirFiles),
-      }], { concurrent: true, exitOnError: false }).run();
-    })
+    .then(() => fs.mkdir(dirFiles))
     .then(() => urlsList.forEach(({ href, pathname }) => {
       new Listr([{
         title: `Download file ${href}`,

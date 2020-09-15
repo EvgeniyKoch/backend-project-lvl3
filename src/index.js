@@ -1,3 +1,1 @@
-import pageLoader from './page-loader.js';
-
-export default pageLoader;
+export { default } from './page-loader.js';

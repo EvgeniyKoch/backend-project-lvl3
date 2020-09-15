@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import debug from 'debug';
 
 import { beforeAll } from '@jest/globals';
-import pageLoader from '../src/page-loader.js';
+import loadPage from '../src/page-loader.js';
 
 nock.disableNetConnect();
 // eslint-disable-next-line no-underscore-dangle
@@ -17,6 +17,7 @@ const url = 'http://example.ru';
 let html;
 let tempDir;
 let css;
+let expectedHtml;
 
 beforeAll(async () => {
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
@@ -25,6 +26,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   html = await fs.readFile(getFixturePath('index.html'), 'utf-8');
   css = await fs.readFile(getFixturePath('style.css'), 'utf-8');
+  expectedHtml = await fs.readFile(getFixturePath('expectedLayout.html'), 'utf-8');
   debug.enable('page-loader');
 });
 
@@ -50,12 +52,11 @@ describe('Tests', () => {
       .get('/main.js')
       .replyWithFile(200, getFixturePath('main.js'));
 
-    await pageLoader(`${url}`, tempDir);
+    await loadPage(url, tempDir);
 
     const receivedHTML = await fs.readFile(path.join(tempDir, 'example-ru.html'), 'utf-8');
     const sources = await fs.readdir(tempDir);
-
-    expect(receivedHTML).toBeTruthy();
+    expect(receivedHTML).toMatch(expectedHtml.trim());
     expect(sources).toHaveLength(2);
   });
 
@@ -75,6 +76,6 @@ describe('Tests', () => {
         code: 'NOT_FOUND',
       });
 
-    await expect(pageLoader(`${url}/empty`, tempDir)).rejects.toThrow('404');
+    await expect(loadPage(`${url}/empty`, tempDir)).rejects.toThrow('404');
   });
 });
