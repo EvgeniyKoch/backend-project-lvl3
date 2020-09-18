@@ -19,29 +19,36 @@ export default (source, output) => {
   const pathToFile = path.join(output, fileName);
   const dirName = createName(source, '_files');
   const dirFiles = path.join(output, dirName);
-  let urlsList;
+  let linksAndLayout;
 
   return querySource(source)
     .then((html) => {
-      const { urls, layout } = updateLayoutAndGetLinks(html, source, dirName);
-      urlsList = urls;
-      fs.writeFile(pathToFile, layout);
+      linksAndLayout = updateLayoutAndGetLinks(html, source, dirName);
     })
     .then(() => fs.mkdir(dirFiles))
-    .then(() => urlsList.forEach(({ href, pathname }) => {
-      new Listr([{
-        title: `Download file ${href}`,
-        task: () => axios({
-          method: 'get',
-          url: href,
-          responseType: 'arraybuffer',
-        })
-          .then(({ data }) => {
-            const filename = createAssetFileName(pathname);
-            fs.writeFile(path.join(dirFiles, filename), data);
-          }),
-      }], { concurrent: true, exitOnError: false }).run();
-    }))
+    .then(() => {
+      const { urls } = linksAndLayout;
+      const tasks = urls.map(({ href, pathname }) => {
+        log('%o', `Download resource ${href}`);
+        return {
+          title: `Download file ${path.extname(pathname.slice(0, 1))}`,
+          task: () => axios({
+            method: 'GET',
+            url: href,
+            responseType: 'arraybuffer',
+          })
+            .then(({ data }) => {
+              const filename = createAssetFileName(pathname);
+              log('%o', `Saving file ${filename}`);
+              return fs.writeFile(path.join(dirFiles, filename), data);
+            }),
+        };
+      });
+      return new Listr(tasks, { concurrent: true, exitOnError: false })
+        .run()
+        .catch((error) => ({ message: 'Resource download failed.', error }));
+    })
+    .then(() => fs.writeFile(pathToFile, linksAndLayout.layout))
     .catch((error) => {
       log('%o', `Failed to write layout. ${error.message}`);
       throw new Error(error.message);
